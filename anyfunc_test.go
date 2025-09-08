@@ -1,4 +1,4 @@
-package anythingfunction
+package anyfunc
 
 import (
 	"context"
