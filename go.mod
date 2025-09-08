@@ -1,4 +1,4 @@
-module github.com/lalxyy/anything-function
+module github.com/lalxyy/anyfunc
 
 go 1.25.0
 
