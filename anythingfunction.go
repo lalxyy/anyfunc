@@ -23,7 +23,6 @@ false, and "error" field containing the error message.`
 type Client struct {
 	openAIClient openai.Client
 	systemPrompt string
-	Functions    []*openai.FunctionDefinitionParam // Custom functions for AI model
 }
 
 // Ensure Client implements ClientInterface.
@@ -36,14 +35,13 @@ type Prompt struct {
 }
 
 // NewClient initializes and returns a new Client with the provided API key.
-func NewClient(apiKey string, functions []*openai.FunctionDefinitionParam) *Client {
+func NewClient(apiKey string) *Client {
 	openAIClient := openai.NewClient(
 		option.WithAPIKey(apiKey),
 	)
 	return &Client{
 		openAIClient: openAIClient,
 		systemPrompt: defaultSystemPrompt,
-		Functions:    functions,
 	}
 }
 
@@ -62,17 +60,6 @@ func (c *Client) Run(ctx context.Context, prompt Prompt) (map[string]any, error)
 			openai.UserMessage(prompt.Description + "\n\n" + string(parameterJSON)),
 		},
 		Model: openai.ChatModel("gpt-5"),
-	}
-	if len(c.Functions) > 0 {
-		chatCompletionTools := make([]openai.ChatCompletionToolParam, 0, len(c.Functions))
-		for _, function := range c.Functions {
-			chatCompletionTools = append(chatCompletionTools, openai.ChatCompletionToolParam{
-				Type:     "function",
-				Function: *function,
-			})
-		}
-		params.Tools = chatCompletionTools
-		slog.Debug("Using functions", "functions", c.Functions)
 	}
 
 	chatCompletion, err := c.openAIClient.Chat.Completions.New(ctx, params)

@@ -16,7 +16,7 @@ func TestBasicFunctionality(t *testing.T) {
 	}
 	apiKey := string(apiKeyBytes)
 
-	client := NewClient(apiKey, nil)
+	client := NewClient(apiKey)
 	prompt := Prompt{
 		Description: "Return the greatest common factor of given two numbers `num1` and `num2`.",
 		Parameters: map[string]any{
@@ -28,5 +28,13 @@ func TestBasicFunctionality(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error running prompt: %v", err)
 	}
-	slog.Info("Response", "data", response)
+	returnValue, ok := response["result"].(float64)
+	if !ok {
+		t.Fatalf("Expected result to be an integer, got %T", response["result"])
+	}
+	expectedValue := 15.0
+	if returnValue != expectedValue {
+		t.Fatalf("Expected result to be %f, got %f", expectedValue, returnValue)
+	}
+	slog.Info("TestBasicFunctionality passed")
 }
