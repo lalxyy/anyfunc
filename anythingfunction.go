@@ -9,7 +9,7 @@ import (
 	"github.com/openai/openai-go/option"
 )
 
-var defaultSystemPrompt = `You are an AI assistant that helps people finish math
+const defaultSystemPrompt = `You are an AI assistant that helps people finish math
 calculation and / or text transformation tasks. You are given a description
 of a task and a set of parameters in JSON format.
 You should generate a response that fulfills the task using the provided
