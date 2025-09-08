@@ -45,9 +45,9 @@ func NewClient(apiKey string) *Client {
 	}
 }
 
-// Run processes the given prompt using the OpenAI API and returns the
+// Call processes the given prompt using the OpenAI API and returns the
 // response.
-func (c *Client) Run(ctx context.Context, prompt Prompt) (map[string]any, error) {
+func (c *Client) Call(ctx context.Context, prompt Prompt) (map[string]any, error) {
 	parameterJSON, err := json.MarshalIndent(prompt.Parameters, "", "  ")
 	if err != nil {
 		return nil, err

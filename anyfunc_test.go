@@ -24,7 +24,7 @@ func TestBasicFunctionality(t *testing.T) {
 			"num2": 60,
 		},
 	}
-	response, err := client.Run(ctx, prompt)
+	response, err := client.Call(ctx, prompt)
 	if err != nil {
 		t.Fatalf("Error running prompt: %v", err)
 	}

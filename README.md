@@ -18,7 +18,7 @@ prompt := anyfunc.Prompt{
     "num2": 60,
   },
 }
-response, err := client.Run(ctx, prompt)
+response, err := client.Call(ctx, prompt)
 // Response would be a map like this:
 // map[string]any{
 //   "result": 15,

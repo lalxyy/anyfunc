@@ -17,6 +17,6 @@ func main() {
 			"num2": 60,
 		},
 	}
-	response, err := client.Run(ctx, prompt)
+	response, err := client.Call(ctx, prompt)
 	slog.Info("Response", "data", response, "error", err)
 }
