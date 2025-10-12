@@ -26,3 +26,5 @@ jobs:
 
     - name: Test
       run: go test -v ./...
+      env:
+        API_KEY: ${{ secrets.API_KEY }}
