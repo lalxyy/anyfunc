@@ -10,7 +10,7 @@ This project aims to make it easier for developers to integrate LLM capabilities
 import "github.com/lalxyy/anyfunc"
 
 // Create an API key from OpenAI platform and replace the placeholder.
-client := anyfunc.NewClient("YOUR_API_KEY")
+client := anyfunc.NewClient(anyfunc.BackendGemini, "YOUR_API_KEY") // Or `anyfunc.BackendOpenAI`
 prompt := anyfunc.Prompt{
   Description: "Return the greatest common factor of given two numbers `num1` and `num2`.",
   Parameters: map[string]any{
