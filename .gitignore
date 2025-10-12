@@ -60,4 +60,4 @@ go.work
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,go,visualstudiocode
 
-api_key
+api_key*
