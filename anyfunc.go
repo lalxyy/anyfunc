@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"strconv"
 
 	"github.com/openai/openai-go"
 	"github.com/openai/openai-go/option"
@@ -45,6 +46,15 @@ type Prompt struct {
 	Parameters  map[string]any
 }
 
+// primitive is a type constraint that matches all primitive types.
+type primitive interface {
+	~int | ~int8 | ~int16 | ~int32 | ~int64 |
+		~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr |
+		~float32 | ~float64 |
+		~string |
+		~complex64 | ~complex128
+}
+
 // NewClient initializes and returns a new Client with the provided API key.
 func NewClient(backend Backend, apiKey string) (*Client, error) {
 	ctx := context.Background()
@@ -76,12 +86,12 @@ func NewClient(backend Backend, apiKey string) (*Client, error) {
 	return nil, errors.New("unsupported backend")
 }
 
-// Call processes the given prompt using the OpenAI API and returns the
-// response.
-func (c *Client) Call(ctx context.Context, prompt Prompt) (map[string]any, error) {
+// CallForJSON processes the given prompt using the specified backend and
+// returns the raw JSON response as a string.
+func (c *Client) CallForJSON(ctx context.Context, prompt Prompt) (string, error) {
 	parameterJSON, err := json.MarshalIndent(prompt.Parameters, "", "  ")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	slog.Debug("Given parameters", "parameters", string(parameterJSON))
 
@@ -98,7 +108,7 @@ func (c *Client) Call(ctx context.Context, prompt Prompt) (map[string]any, error
 
 		chatCompletion, err := c.openAIClient.Chat.Completions.New(ctx, params)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 		response = chatCompletion.Choices[0].Message.Content
 	case BackendGemini:
@@ -111,15 +121,66 @@ func (c *Client) Call(ctx context.Context, prompt Prompt) (map[string]any, error
 			},
 		)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 		response = result.Text()
 	}
 	slog.Debug("Raw response", "response", response)
+	return response, nil
+}
+
+// Call processes the given prompt using the OpenAI API and returns the
+// response.
+func (c *Client) Call(ctx context.Context, prompt Prompt) (map[string]any, error) {
+	jsonResponse, err := c.CallForJSON(ctx, prompt)
+	if err != nil {
+		return nil, err
+	}
 
 	var result map[string]any
-	if err := json.Unmarshal([]byte(response), &result); err != nil {
+	if err := json.Unmarshal([]byte(jsonResponse), &result); err != nil {
 		return nil, err
+	}
+	if err, ok := result["error"].(string); ok {
+		return result, errors.New(err)
+	}
+	return result, nil
+}
+
+// Call is a generic function that processes the given prompt using the provided
+// ClientInterface and unmarshals the response into the specified struct type RT.
+func Call[RT any](ctx context.Context, client ClientInterface, prompt Prompt) (RT, error) {
+	var zero RT
+	response, err := client.CallForJSON(ctx, prompt)
+	if err != nil {
+		return zero, err
+	}
+
+	switch any(zero).(type) {
+	case int, int8, int16, int32, int64,
+		uint, uint8, uint16, uint32, uint64, uintptr,
+		float32, float64,
+		string,
+		complex64, complex128:
+		// If RT is a primitive type, unmarshal into a map to extract the "result" field.
+		var tempMap map[string]any
+		if err := json.Unmarshal([]byte(response), &tempMap); err != nil {
+			return zero, err
+		}
+		if err, ok := tempMap["error"].(string); ok {
+			return zero, errors.New(err)
+		}
+		resultValue, ok := tempMap["result"]
+		if !ok {
+			return zero, errors.New("response does not contain 'result' field")
+		}
+		strconv.ParseInt()
+	}
+
+	// Unmarshal the JSON into the desired struct type
+	var result RT
+	if err := json.Unmarshal([]byte(response), &result); err != nil {
+		return zero, err
 	}
 	return result, nil
 }
